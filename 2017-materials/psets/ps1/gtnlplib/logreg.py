@@ -15,9 +15,14 @@ def compute_py(x,weights,labels):
     :rtype: dict
 
     """
-    # hint: you should use clf_base.predict and logsumexp
-    raise NotImplementedError
-    
+    cc={};
+    key, value = predict(x,weights,labels);
+    for label in labels:
+        topPart = np.exp(value[label]);
+        bottomPart = np.exp(logsumexp(value.values()));
+        cc[label] = topPart/bottomPart;
+    return cc;
+                                                   
 def estimate_logreg(x,y,N_its,learning_rate=1e-4,regularizer=1e-2,lazy_reg=True):
     """estimate a logistic regression classifier
 

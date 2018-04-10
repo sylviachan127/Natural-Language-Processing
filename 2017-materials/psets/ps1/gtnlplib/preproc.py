@@ -1,6 +1,7 @@
 import nltk
 import pandas as pd
 from collections import Counter
+from nltk.tokenize import sent_tokenize, word_tokenize
 
 def tokenize_and_downcase(string,vocab=None):
     """for a given string, corresponding to a document:
@@ -13,8 +14,15 @@ def tokenize_and_downcase(string,vocab=None):
     :rtype: Counter
 
     """
+    ## break paragraph into sentence
     bow = Counter()
-    raise NotImplementedError
+    for s in sent_tokenize(string):
+        token = word_tokenize(s);
+        #print token
+        for word in token:
+            bow[word.lower()]+=1;
+    #raise NotImplementedError
+    #print bow
     return bow
 
 

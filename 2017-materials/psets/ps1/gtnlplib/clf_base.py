@@ -13,19 +13,42 @@ def make_feature_vector(base_features,label):
     :rtype: dict
 
     """
-    raise NotImplementedError
+    #raise NotImplementedError
+    fv = {}
+    fv[(label,OFFSET)]=1;
+    for bf in base_features:
+        #value = base_features[bf];
+        #fv[(label,bf)]=value;
+        fv[(label,bf)]=base_features[bf];
+        #scores[fv_key[0]]=value;
+        #print (scores[fv_key[0]])
+    return fv;
     
 def predict(base_features,weights,labels):
     """prediction function
 
     :param base_features: a dictionary of base features and counts
     :param weights: a defaultdict of features and weights. features are tuples (label,base_feature).
+    defaultdict(<type 'float'>, {('worldnews', 'world'): 0.5, (u'worldnews', u'give'): 0.0, ('askreddit', 'ask'): 0.5, ('iama', 'iama'): 1, ('science', 'science'): 1.0, ('todayilearned', 'todayilearned'): 1.0, ('worldnews', 'news'): 0.5, ('worldnews', 'worldnews'): 1.0, ('askreddit', 'askreddit'): 1.0, ('iama', '**OFFSET**'): 0.1, ('todayilearned', 'til'): 1.0})
     :param labels: a list of candidate labels
     :returns: top scoring label, scores of all labels
     :rtype: string, dict
 
     """
-    raise NotImplementedError
+    #print "labels"
+    scores = {}
+    for label in labels:
+        fv = make_feature_vector(base_features,label);
+        #print(fv);
+        for fv_key in fv:
+            if(weights[fv_key]!=0 or weights[fv_key]!=None):
+            #if(weights[fv_key]!=None):
+                currentWeight = (fv[fv_key]*weights[fv_key]);
+            #currentLabel = fv_key[0]
+                if(scores.get(label)==None):
+                    scores[label]=currentWeight;
+                else:
+                    scores[label]+=currentWeight;
     return argmax(scores),scores
 
 def predict_all(x,weights,labels):

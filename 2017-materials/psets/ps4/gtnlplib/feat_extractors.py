@@ -24,5 +24,12 @@ class SimpleFeatureExtractor:
             features
         """
         # STUDENT
-        pass
+        returnList = []
+        stackCopy = parser_state.stack_peek_n(2)
+        for var in stackCopy:
+            returnList.append(var.embedding)
+
+        ibCopy = parser_state.input_buffer_peek_n(1)
+        returnList.append(ibCopy[0].embedding)
+        return returnList
         # END STUDENT

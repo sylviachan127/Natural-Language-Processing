@@ -15,7 +15,13 @@ def hmm_features(tokens,curr_tag,prev_tag,m):
     :rtype: dict
 
     """
-    raise NotImplementedError
+    returnDict = {}
+    if(curr_tag!=END_TAG):
+        returnDict[(curr_tag,tokens[m],EMIT)]=1
+        returnDict[(curr_tag,prev_tag,TRANS)]=1
+    else:
+        returnDict[(curr_tag,prev_tag,TRANS)]=1
+    return returnDict;
     
 
 def compute_HMM_weights(trainfile,smoothing):
@@ -32,12 +38,46 @@ def compute_HMM_weights(trainfile,smoothing):
     all_tags = tag_trans_counts.keys()
 
     # hint: call compute_transition_weights
+    weights = compute_transition_weights(tag_trans_counts,smoothing)
+
     # hint: set weights for illegal transitions to -np.inf
+    for prev_tag in all_tags:
+        weights[(prev_tag,END_TAG,TRANS)]=-np.inf
+        weights[(END_TAG,END_TAG,TRANS)]=-np.inf
+        weights[(START_TAG,prev_tag,TRANS)]=-np.inf
+        weights[(START_TAG,START_TAG,TRANS)]=-np.inf
+        weights[(START_TAG,END_TAG,TRANS)]=-np.inf
+        weights[(END_TAG,START_TAG,TRANS)]=-np.inf
+
     # hint: call get_tag_word_counts and estimate_nb_tagger
+    tag_word_counts = most_common.get_tag_word_counts(trainfile);
+    # print tag_word_counts
+    counter_items = np.array(tag_word_counts.items())
+    counters = counter_items[:,1] 
+    update_nb_tagger = defaultdict(float)
+    nb_tagger = naive_bayes.estimate_nb_tagger(tag_word_counts,smoothing)
+    for key in nb_tagger:
+        value = nb_tagger[key];
+        # print "key: ", key
+        # print type(key)
+        # print "value: ", value
+        if(key[0]!=OFFSET and key[1]!=OFFSET):
+            new_key = (key[0],key[1],EMIT)
+            update_nb_tagger[new_key]=value
+    # print nb_tagger
+    # print counters
+    # print "counters: ", counters
+    # for count in counters:
+    # nb_tagger = naive_bayes.estimate_nb_tagger(counters,smoothing)
+    # print "nb_tagger: ", nb_tagger
     # hint: Counter.update() combines two Counters
+    newDict = defaultdict(float)
+    newDict.update(update_nb_tagger)
+    newDict.update(weights)
 
     # hint: return weights, all_tags
-    raise NotImplementedError
+    return newDict, all_tags
+    # raise NotImplementedError
 
 
 def compute_transition_weights(trans_counts, smoothing):
@@ -52,8 +92,25 @@ def compute_transition_weights(trans_counts, smoothing):
     :returns: dict of features [(curr_tag,prev_tag,TRANS)] and weights
 
     """
-
     weights = defaultdict(float)
-    raise NotImplementedError
+    counter_items = np.array(trans_counts.items())
+    y = counter_items[:,0]   ### List of labels
+    x = counter_items[:,1]   ### List of Counters
+    for prev_tag in y:
+        denominator = trans_counts[prev_tag]
+        denominator_value = np.sum(denominator.values())+(len(y)*smoothing)
+        for current_tag in y:
+            nominator = trans_counts[prev_tag][current_tag]
+            nominator+=smoothing
+            denominator = trans_counts[prev_tag]
+            weights[(current_tag,prev_tag,TRANS)] = np.log(nominator/denominator_value)
+        # weights[(prev_tag,END_TAG,TRANS)]=0
+        weights[(START_TAG,prev_tag,TRANS)]=-np.inf
+    for prev_tag in y:
+        denominator = trans_counts[prev_tag]
+        denominator_value = np.sum(denominator.values())+(len(y)*smoothing)
+        nominator = trans_counts[prev_tag][END_TAG] + smoothing
+        weights[(END_TAG,prev_tag,TRANS)] = np.log(nominator/denominator_value)
+    return weights
     
 

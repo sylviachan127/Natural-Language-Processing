@@ -14,12 +14,30 @@ def mention_rank(markables,i,feats,weights):
     :rtype: int
 
     """
+    highestAnt = 0
+    highestScore = 0
+    for index in range(i+1):
+        feat_score = feats(markables,index,i)
+        currentScore = 0
+        for key, value in feat_score.iteritems():
+            key_weight = weights[key]
+            currentScore += (key_weight*value)
+        if(currentScore>highestScore):
+            highestScore = currentScore
+            highestAnt = index
+    return highestAnt
     ## hide
-    raise NotImplementedError
+    # raise NotImplementedError
     
 # deliverable 3.3
 def compute_instance_update(markables,i,true_antecedent,feats,weights):
     """Compute a perceptron update for markable i.
+    fp + fn should be update
+
+    true!= pred - >fn
+
+    i + true - > +
+    predict + i -> - 
     This function should call mention_rank to determine the predicted antecedent,
     and should make an update if the true antecedent and predicted antecedent *refer to different entities*
 
@@ -35,17 +53,30 @@ def compute_instance_update(markables,i,true_antecedent,feats,weights):
     :rtype: dict
 
     """
-    # keep
+    # # keep
     pred_antecedent = mention_rank(markables,i,feats,weights)
+    returnDict = dict()
+    fn = False
+    fp = False
+    i_ent = markables[i]['entity']
+    pred_ent = markables[pred_antecedent]['entity']
+    true_ent = markables[true_antecedent]['entity']
+    if(true_ent!=pred_ent) or (pred_ent!=i_ent):
+        fp = True
+    if(true_antecedent<i):
+        if(pred_ent!=i_ent) or (pred_antecedent==i):
+            fn = True
+    if(fp or fn):
+        fv = feats(markables, true_antecedent,i)
+        fv_hat = feats(markables, pred_antecedent,i)
+        returnDict = fv
+        for key, value in fv_hat.iteritems():
+            if(key in returnDict):
+                returnDict[key] = returnDict[key]-value
+            else:
+                returnDict[key] = -value
 
-    ## possibly useful
-    #print i,true_antecedent,pred_antecedent
-    #print markables[i]#['string']
-    #print markables[true_antecedent], feats(markables,true_antecedent,i)
-    #print markables[pred_antecedent], feats(markables,pred_antecedent,i)
-    #print ""
-
-    raise NotImplementedError
+    return returnDict
     
 # deliverable 3.4
 def train_avg_perceptron(markables,features,N_its=20):
@@ -55,13 +86,24 @@ def train_avg_perceptron(markables,features,N_its=20):
     weights = defaultdict(float)
     tot_weights = defaultdict(float)
     weight_hist = []
-    T = 0.
-    
+    T = 0
+
+    # print "at 3.4_sylvia"
     for it in xrange(N_its):
         num_wrong = 0 #helpful but not required to keep and print a running total of errors
+        index = 0
         for document in markables:
             # YOUR CODE HERE
-            pass
+            true_antecedent = coref.get_true_antecedents(document)
+            for i in range(len(document)):
+                pu = compute_instance_update(document, i, true_antecedent[i], features, weights)
+                if(len(pu)!=0):
+                    num_wrong+=1
+                for pu_key in pu:
+                    weights[pu_key]+=pu[pu_key]
+                for w_key in weights:
+                    tot_weights[w_key]+=weights[w_key]
+                T+=1
         print num_wrong,
 
         # update the weight history

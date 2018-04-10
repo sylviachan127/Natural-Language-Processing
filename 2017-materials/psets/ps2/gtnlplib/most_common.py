@@ -14,11 +14,15 @@ def get_tag_word_counts(filename):
 
     """
     all_counters = defaultdict(lambda : Counter())
-
-    # your code here
-    # hint: for words, tags in enumerate(preproc.conll_seq_generator(TRAIN_FILE)):
-
-    raise NotImplementedError
+    for words, tags in enumerate(conll_seq_generator(filename)):
+        word_list = tags[0]
+        tag_list = tags[1]
+        for x in range(len(word_list)):
+            currentWord = word_list[x]
+            currentTag = tag_list[x]
+            currentTagSet = all_counters[currentTag]
+            currentTagSet[currentWord] += 1
+            all_counters[currentTag] = currentTagSet
 
     return all_counters
 
@@ -30,6 +34,7 @@ def get_noun_weights():
     """
     weights = defaultdict(float)
     weights[('NOUN'),OFFSET] = 1.
+    print weights
     return weights
 
 def get_most_common_word_weights(trainfile):
@@ -41,8 +46,52 @@ def get_most_common_word_weights(trainfile):
     :rtype: defaultdict
 
     """
-    weights = defaultdict(float)
-    raise NotImplementedError
+    # # trainfile = trainfile[:3]
+    # # weights = defaultdict(float)
+    weights = get_noun_weights()
+    print weights
+    dict_word = get_tag_word_counts(trainfile)
+    for types in dict_word:
+        # print types
+        for x in dict_word[types]:
+            weights[types,x] = dict_word[types][x]
+            # print x
+            # print "count: ", dict_word[types][x]
+    # print dict_word
+
+    # wordweight = defaultdict(lambda: defaultdict(float))
+    # # nested = wordweight["hi"]
+    # # nested["Noun"]=2
+    # # nested["verb"]=5
+    # # nested["verb2"]=4
+    # # if(len(nested)!=0):
+    # #     print "max", argmax(nested)
+    # # print "hi"
+    # # print wordweight
+    # # for words, tags in enumerate(conll_seq_generator(trainfile)):
+    # #     word_list = tags[0]
+    # #     tag_list = tags[1]
+    # #     for x in range(len(word_list)):
+    # #         currentWord = word_list[x]
+    # #         currentTag = tag_list[x]
+
+    # #         nestedWeight = wordweight[currentWord]
+    # #         nestedWeight[currentTag]+=1
+    # #         mostFreqentTag = argmax(nestedWeight)
+    # #         weights[currentWord] = mostFreqentTag
+    # for words, tags in enumerate(conll_seq_generator(trainfile)):
+    #     word_list = tags[0]
+    #     tag_list = tags[1]
+    #     for x in range(len(word_list)):
+    #         currentWord = word_list[x]
+    #         currentTag = tag_list[x]
+
+    #         nestedWeight = wordweight[currentWord]
+    #         nestedWeight[currentTag]+=1
+    #         mostFreqentTag = argmax(nestedWeight)
+    #         weights[(currentTag,currentWord)] = nestedWeight[currentTag]
+    # # print weights
+    # weights = get_noun_weights()
     return weights
 
 def get_tag_trans_counts(trainfile):

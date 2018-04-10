@@ -28,7 +28,23 @@ def classifier_tagger(tokens,feat_func,weights,all_tags):
     # argmax will be part of your solution
     # you can just pass "IGNORE" for the prev_tag in the feature function
 
-    raise NotImplementedError
+    rList = []
+    score = 0.0
+    M = len(tokens)
+    for index in range(M):
+        currentDict = defaultdict(float)
+        for tags in all_tags:
+            # for prev_tag in all_tags:
+            ff = feat_func(tokens,tags,"IGNORE",index)
+            for keys,count in ff.iteritems():
+                wAdd = weights[keys]
+                valueAdd = wAdd*count
+                currentDict[tags]+=valueAdd
+        highestTag = argmax(currentDict)
+        rList.append(highestTag)
+        score+=currentDict[highestTag]
+
+    return rList,score
 
 # deliverable 1.3
 def compute_features(tokens,tags,feat_func):
@@ -43,7 +59,24 @@ def compute_features(tokens,tags,feat_func):
     """
     feats = dict()
     M = len(tokens)
-    raise NotImplementedError
+    returnDict = defaultdict(float)
+    for index in range(1,M):
+        ff = feat_func(tokens,tags[index],tags[index-1],index)
+        # print "words: ", tokens[index]
+        for nodes in ff:
+            # print "returnDict[nodes]: ", returnDict[nodes] " currentValue: ", 
+            returnDict[nodes]+=ff[nodes]
+            # print "returnDict[nodes]: ", nodes, " currentValue: ", returnDict[nodes]
+    # print "test"
+    ff2 = feat_func(tokens,tags[0],START_TAG,0)
+    for nodes in ff2:
+        returnDict[nodes]+=ff2[nodes]
+        # print "hi"
+    ff3 = feat_func(tokens,END_TAG,tags[M-1],M)
+    for nodes in ff3:
+        returnDict[nodes]+=ff3[nodes]
+
+    return returnDict
 
 def eval_tagging_model(testfile,tagger_func,features,weights,all_tags,output_file=None):
     tagger = lambda words, all_tags : tagger_func(words,

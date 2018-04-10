@@ -13,6 +13,7 @@ JA_TEST_FILE_HIDDEN = 'data/ja-ud-test-hidden.conllu'
 
 OFFSET = '**OFFSET**'
 UNKNOWN  = '**UNKNOWN**'
+GRADING = '4650' 
 
 START_TAG = '--START--'
 TRANS ='--TRANS--'

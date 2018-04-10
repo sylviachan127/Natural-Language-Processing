@@ -14,7 +14,10 @@ def word_feats(words,y,y_prev,m):
     :rtype: dict
 
     """
-    fv = dict()    
+    fv = dict() 
+    if(m<len(words)):
+        fv[(y,constants.CURR_WORD_FEAT,words[m])] = 1
+    fv[(y,constants.OFFSET)] = 1
     return fv
 
 # Deliverable 2.1
@@ -32,7 +35,15 @@ def word_suff_feats(words,y,y_prev,m):
     :rtype: dict
 
     """
-    raise NotImplementedError
+    fv = word_feats(words,y,y_prev,m)
+    if(m<len(words)):
+        word = words[m]
+        if(len(word)>=2):
+            subfix = word[-2:]
+            fv[(y,constants.SUFFIX_FEAT,subfix)]=1
+        else:
+            fv[(y,constants.SUFFIX_FEAT,word)]=1
+    return fv;
     
 def word_neighbor_feats(words,y,y_prev,m):
     """compute features for the current word being tagged, its predecessor, and its successor.
@@ -46,24 +57,91 @@ def word_neighbor_feats(words,y,y_prev,m):
 
     """
 
-    # hint: use constants.PREV_WORD_FEAT and constants.NEXT_WORD_FEAT
-    raise NotImplementedError
+    returnDict = dict()
+    if(m<len(words)):
+        currentKey = (y,constants.CURR_WORD_FEAT,words[m])
+        returnDict[currentKey]=1
+    offsetKey = (y,constants.OFFSET)
+    returnDict[offsetKey]=1
+    if(m<=len(words)):
+        if(m!=0):
+            prevKey = (y,constants.PREV_WORD_FEAT,words[m-1])
+        else:
+            prevKey = (y,constants.PREV_WORD_FEAT,constants.PRE_START_TOKEN)
+        returnDict[prevKey]=1
+    if(m<len(words)):
+        if(m!=(len(words)-1)):
+            nextKey = (y,constants.NEXT_WORD_FEAT,words[m+1])
+        else:
+            nextKey = (y,constants.NEXT_WORD_FEAT,constants.POST_END_TOKEN)
+        returnDict[nextKey]=1
+    return returnDict
 
     
 def word_feats_competitive_en(words,y,y_prev,m):
-    raise NotImplementedError
+    # 0.893685051958
+    rDict = word_suff_feats(words,y,y_prev,m)
+    # add first two word
+    if(m<len(words)):
+        word = words[m]
+        if(len(word)>=2):
+            subfix = word[:2]
+            rDict[(y,constants.SUFFIX_FEAT,subfix)]=1
+
+    y = word_neighbor_feats(words,y,y_prev,m)
+    z = rDict.copy()
+    z.update(y)
+    return z
     
 def word_feats_competitive_ja(words,y,y_prev,m):
-    raise NotImplementedError
+    # 0.917909610856
+    rDict = word_suff_feats(words,y,y_prev,m)
+    # add first two word
+    if(m<len(words)):
+        word = words[m]
+        if(len(word)>=2):
+            subfix = word[:2]
+            rDict[(y,constants.SUFFIX_FEAT,subfix)]=1
+
+
+    y = word_neighbor_feats(words,y,y_prev,m)
+    z = rDict.copy()
+    z.update(y)
+    return z
 
 def hmm_feats(words,y,y_prev,m):
-    fv = dict()
-    return fv
+    # 0.81934452438
+    returnDict = dict()
+    if(m==0):
+        y_prev = constants.START_TAG
+    if(y==constants.END_TAG):
+        returnDict[(constants.END_TAG,constants.PREV_TAG_FEAT,y_prev)]=1
+    else:
+        returnDict[(y,constants.CURR_WORD_FEAT,words[m])]=1
+        returnDict[(y,constants.PREV_TAG_FEAT,y_prev)]=1
+    return returnDict;
 
 def hmm_feats_competitive_en(words,y,y_prev,m):
-    raise NotImplementedError
+    returnDict = word_feats_competitive_en(words,y,y_prev,m)
+    if(m==0):
+        y_prev = constants.START_TAG
+    if(y==constants.END_TAG):
+        returnDict[(constants.END_TAG,constants.PREV_TAG_FEAT,y_prev)]=1
+    else:
+        returnDict[(y,constants.CURR_WORD_FEAT,words[m])]=1
+        returnDict[(y,constants.PREV_TAG_FEAT,y_prev)]=1
+
+    return returnDict;
 
 def hmm_feats_competitive_ja(words,y,y_prev,m):
-    raise NotImplementedError
+    returnDict = word_suff_feats(words,y,y_prev,m)
+    if(m==0):
+        y_prev = constants.START_TAG
+    if(y==constants.END_TAG):
+        returnDict[(constants.END_TAG,constants.PREV_TAG_FEAT,y_prev)]=1
+    else:
+        returnDict[(y,constants.CURR_WORD_FEAT,words[m])]=1
+        returnDict[(y,constants.PREV_TAG_FEAT,y_prev)]=1
+    return returnDict;
 
 

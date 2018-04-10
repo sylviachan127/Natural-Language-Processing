@@ -49,6 +49,7 @@ class VanillaWordEmbeddingLookup(nn.Module):
 
         # STUDENT
         # name your embedding member "word_embeddings"
+        self.word_embeddings = nn.Embedding(len(word_to_ix),embedding_dim)
         # END STUDENT
 
 
@@ -63,6 +64,8 @@ class VanillaWordEmbeddingLookup(nn.Module):
         inp = utils.sequence_to_variable(sentence, self.word_to_ix, self.use_cuda)
         embeds = [] # store each Variable in here
         # STUDENT
+        for i in inp:
+            embeds.append(self.word_embeddings(i))
         # END STUDENT
         return embeds
 
@@ -96,7 +99,14 @@ class BiLSTMWordEmbeddingLookup(nn.Module):
         # STUDENT
         # Construct the needed components in this order:
         # 1. An embedding lookup table
+        self.word_embeddings = nn.Embedding(len(word_to_ix), word_embedding_dim)
         # 2. The LSTM
+        self.lstm = nn.LSTM(
+            self.word_embedding_dim,
+            self.output_dim/2,
+            num_layers=self.num_layers,
+            bidirectional=True,
+            dropout=dropout)
         # Note we want the output dim to be hidden_dim, but since our LSTM
         # is bidirectional, we need to make the output of each direction hidden_dim/2
         # name your embedding member "word_embeddings"
@@ -126,6 +136,13 @@ class BiLSTMWordEmbeddingLookup(nn.Module):
         inp = utils.sequence_to_variable(sentence, self.word_to_ix, self.use_cuda)
 
         # STUDENT
+        embeds = self.word_embeddings(inp).view(len(sentence), 1, self.word_embedding_dim)
+        out, self.hidden = self.lstm(embeds)
+        returnList = []
+        for item in out:
+            returnList.append(item)
+        # print out.view(len(sentence), 1, self.word_embedding_dim)
+        return returnList
         # END STUDENT
 
     def init_hidden(self):
@@ -188,7 +205,9 @@ class MLPCombinerNetwork(nn.Module):
         # STUDENT
         # Construct the components in this order
         # 1. The first linear layer
+        self.firstLayer = nn.Linear(embedding_dim*2,embedding_dim)
         # 2. The second linear layer
+        self.secondLayer = nn.Linear(embedding_dim,embedding_dim)
         # The output of the first linear layer should be embedding_dim
         # (the rest of the input/output dims are thus totally determined)
         # END STUDENT
@@ -203,7 +222,10 @@ class MLPCombinerNetwork(nn.Module):
         :return The embedding of the combination as a row vector
         """
         # STUDENT
-        pass
+        theBigVector = utils.concat_and_flatten([head_embed, modifier_embed])
+        first = self.firstLayer(theBigVector)
+        tanh = F.tanh(first)
+        return self.secondLayer(tanh)
         # END STUDENT
 
 
@@ -234,6 +256,11 @@ class LSTMCombinerNetwork(nn.Module):
         self.use_cuda = False
 
         # STUDENT
+        self.lstm = nn.LSTM(
+            embedding_dim*2,
+            embedding_dim,
+            num_layers=num_layers,
+            dropout=dropout)
         # END STUDENT
 
         self.hidden = self.init_hidden()
@@ -263,7 +290,7 @@ class LSTMCombinerNetwork(nn.Module):
 
         NOTE: use utils.concat_and_flatten() like in the MLP Combiner
         NOTE: Make sure the tensor you hand to your LSTM is the size it wants:
-            (seq_len, batch_size, embedding_dim), which in this case, is (1, 1, embedding_dim)
+            (seq_len, batch_size, embedding_dim), which in this case, is (1, 1, embedding_dim*2)
         NOTE: If you add more layers to the LSTM (more than 1), your code may break.
             To fix it, look at the value of self.hidden whenever you have more layers.
 
@@ -271,7 +298,10 @@ class LSTMCombinerNetwork(nn.Module):
         :param modifier_embed Embedding of the modifier
         """
         # STUDENT
-        pass
+        concat = utils.concat_and_flatten([head_embed, modifier_embed])
+        inputs = concat.view(1,1,self.embedding_dim*2)
+        out, self.hidden = self.lstm(inputs,self.hidden)
+        return out.view (1, self.embedding_dim)
         # END STUDENT
 
 
@@ -305,7 +335,9 @@ class ActionChooserNetwork(nn.Module):
         # STUDENT
         # Construct in this order:
         # 1. The first linear layer (the one that is called first in the network)
+        self.first = nn.Linear(input_dim,input_dim)
         # 2. The second linear layer
+        self.second = nn.Linear(input_dim,3)
         # END STUDENT
 
     def forward(self, inputs):
@@ -318,5 +350,9 @@ class ActionChooserNetwork(nn.Module):
             (it is a row vector, with an entry for each action)
         """
         # STUDENT
-        pass
+        input_flat = utils.concat_and_flatten(inputs)
+        ff = self.first(input_flat)
+        relu = F.relu(ff)
+        ss = self.second(relu)
+        return F.log_softmax(ss)
         # END STUDENT

@@ -32,7 +32,17 @@ def exact_match_no_pronouns(m_a,m_i):
     :rtype: boolean
 
     """
-    raise NotImplementedError
+    maString = m_a['string']
+    miString = m_i['string']
+    if(' '.join(m_a['string']).replace(' ', '').lower()==' '.join(m_i['string']).replace(' ', '').lower()):
+        if(len(maString)==1):
+            if(maString=="i"):
+                return True
+            if(maString[0].replace(' ', '').lower() in pronouns):
+                return False
+        return True
+    else:
+        return False
 
 # deliverable 2.3
 def match_last_token(m_a,m_i):
@@ -43,7 +53,12 @@ def match_last_token(m_a,m_i):
     :rtype: boolean
 
     """
-    raise NotImplementedError
+    maString = m_a['string']
+    miString = m_i['string']
+    if(maString[-1].replace(' ', '').lower()==miString[-1].replace(' ', '').lower()):
+        return True
+    else:
+        return False
 
 # deliverable 2.4
 def match_last_token_no_overlap(m_a,m_i):
@@ -55,8 +70,113 @@ def match_last_token_no_overlap(m_a,m_i):
     :rtype: boolean
 
     """
-    raise NotImplementedError
-    
+    maString = m_a['string']
+    maStart = m_a['start_token']
+    maEnd = m_a['end_token']
+
+    miString = m_i['string']
+    miStart = m_i['start_token']
+    miEnd = m_i['end_token']
+ 
+    if(maStart<miStart):
+        x1 = maStart
+        x2 = miStart
+    else:
+        x1 = miStart
+        x2 = maStart
+    if(maEnd<miEnd):
+        y1 = maEnd
+        y2 = miEnd
+    else:
+        y1 = miEnd
+        y2 = maEnd
+
+
+    if(maString[-1].replace(' ', '').lower()==miString[-1].replace(' ', '').lower()):
+        if (x1 <= y2 and y1 <= x2):
+            return True
+        else:
+            return False
+    else:
+        return False
+
+def mention_overlap(m_a,m_i):
+    """
+
+    :param m_a: antecedent markable
+    :param m_i: referent markable
+    :returns: True if final tokens match and strings do not overlap
+    :rtype: boolean
+
+    """
+    maString = m_a['string']
+    maStart = m_a['start_token']
+    maEnd = m_a['end_token']
+
+    miString = m_i['string']
+    miStart = m_i['start_token']
+    miEnd = m_i['end_token']
+ 
+    if(maStart<miStart):
+        x1 = maStart
+        x2 = miStart
+    else:
+        x1 = miStart
+        x2 = maStart
+    if(maEnd<miEnd):
+        y1 = maEnd
+        y2 = miEnd
+    else:
+        y1 = miEnd
+        y2 = maEnd
+
+
+    if (x1 <= y2 and y1 <= x2):
+        return False
+    else:
+        return True
+
+def exact_match_no_overlap(m_a,m_i):
+    """
+
+    :param m_a: antecedent markable
+    :param m_i: referent markable
+    :returns: True if final tokens match and strings do not overlap
+    :rtype: boolean
+
+    """
+    maString = m_a['string']
+    maStart = m_a['start_token']
+    maEnd = m_a['end_token']
+
+    miString = m_i['string']
+    miStart = m_i['start_token']
+    miEnd = m_i['end_token']
+ 
+    if(maStart<miStart):
+        x1 = maStart
+        x2 = miStart
+    else:
+        x1 = miStart
+        x2 = maStart
+    if(maEnd<miEnd):
+        y1 = maEnd
+        y2 = miEnd
+    else:
+        y1 = miEnd
+        y2 = maEnd
+
+
+    if(len(maString)!=len(miString)):
+        return False
+    else:
+        for i in range(len(maString)):
+            if(maString[i].replace(' ', '').lower()!=miString[i].replace(' ', '').lower()):
+                return False
+        if (x1 <= y2 and y1 <= x2):
+            return True
+        else:
+            return False
 # deliverable 2.5
 def match_on_content(m_a, m_i):
     """
@@ -67,7 +187,56 @@ def match_on_content(m_a, m_i):
     :rtype: boolean
 
     """
-    raise NotImplementedError
+
+    contentWord = ['NN','NNS','NNP','NNPS','PRP','PRP$','WP','WP$','CD']
+    maTag = m_a['tags']
+    maStart = m_a['start_token']
+    maEnd = m_a['end_token']
+
+    miTag = m_i['tags']
+    miStart = m_i['start_token']
+    miEnd = m_i['end_token']
+
+    if(maStart<miStart):
+        x1 = maStart
+        x2 = miStart
+    else:
+        x1 = miStart
+        x2 = maStart
+    if(maEnd<miEnd):
+        y1 = maEnd
+        y2 = miEnd
+    else:
+        y1 = miEnd
+        y2 = maEnd
+
+    maContent = []
+    maString = []
+    maCount = 0
+    for i in range(len(maTag)):
+        if(maTag[i].replace(' ', '') in contentWord):
+            maContent.insert(maCount,maTag[i])
+            maString.insert(maCount,m_a['string'][i])
+            maCount+=1
+    miContent = []
+    miString = []
+    miCount = 0
+    for i in range(len(miTag)):
+        if(miTag[i].replace(' ', '') in contentWord):
+            miContent.insert(miCount,miTag[i])
+            miString.insert(miCount,m_i['string'][i])
+            miCount+=1
+    if(len(maContent)!=len(miContent)):
+        return False
+    else:
+        for i in range(len(maContent)):
+            if(maString[i].replace(' ', '').lower()!=miString[i].replace(' ', '').lower()):
+                return False           
+        if (x1 <= y2 and y1 <= x2):
+            return True
+        else:
+            return False
+
     
 
 ########## helper code

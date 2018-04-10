@@ -54,6 +54,7 @@ class ParserState:
         next_item = self.input_buffer[self.curr_input_buff_idx]
         self.stack.append(next_item)
         self.curr_input_buff_idx += 1
+        # print "hello again"
 
     def reduce_left(self):
         return self._reduce(Actions.REDUCE_L)
@@ -71,7 +72,7 @@ class ParserState:
         <END-OF-INPUT> should not be shifted onto the stack ever.
         """
         # STUDENT
-        pass
+        return self.stack_len() <= 1 and self.input_buffer_peek_n(1)[0].headword == END_OF_INPUT_TOK
         # END STUDENT
 
     def stack_len(self):
@@ -128,6 +129,20 @@ class ParserState:
         assert len(self.stack) >= 2, "ERROR: Cannot reduce with stack length less than 2"
         
         # STUDENT
+        firstItem = self.stack.pop();
+        secondItem = self.stack.pop();
+        deGraphEdge = None
+        if(action==Actions.REDUCE_L):
+            combineTwo = self.combiner(firstItem.embedding,secondItem.embedding)
+            combinder = StackEntry(firstItem.headword,firstItem.headword_pos,combineTwo)
+            deGraphEdge = DepGraphEdge((firstItem.headword,firstItem.headword_pos),(secondItem.headword,secondItem.headword_pos))
+            self.stack.append(combinder)
+        if(action==Actions.REDUCE_R):
+            combineTwo = self.combiner(secondItem.embedding,firstItem.embedding)
+            combinder = StackEntry(secondItem.headword,secondItem.headword_pos,combineTwo)
+            deGraphEdge = DepGraphEdge((secondItem.headword,secondItem.headword_pos),(firstItem.headword,firstItem.headword_pos))
+            self.stack.append(combinder)
+        return deGraphEdge
         # hint: use list.pop()
         # END STUDENT
 
@@ -207,8 +222,27 @@ class TransitionParser(nn.Module):
             have_gold_actions = True
         else:
             have_gold_actions = False
-
         # STUDENT
+        while not parser_state.done_parsing():
+            features = self.feature_extractor.get_features(parser_state)
+            act_result = self.action_chooser(features)
+            outputs.append(act_result)
+            if have_gold_actions:
+                currentAction = action_queue.popleft()
+            else:
+                currentAction = utils.argmax(act_result)
+                if (currentAction==Actions.SHIFT ) and (parser_state.input_buffer_peek_n(1)[0].headword is END_OF_INPUT_TOK):
+                    currentAction=Actions.REDUCE_R
+            actions_done.append(currentAction)
+            if(currentAction==Actions.SHIFT):
+                parser_state.shift()
+            if(currentAction==Actions.REDUCE_L):
+                ll = parser_state.reduce_left()
+                dep_graph.add(ll)
+            if(currentAction==Actions.REDUCE_R):
+                rr = parser_state.reduce_right()
+                dep_graph.add(rr)
+
         # END STUDENT
 
         dep_graph.add(DepGraphEdge((ROOT_TOK, -1), (parser_state.stack[-1].headword, parser_state.stack[-1].headword_pos)))

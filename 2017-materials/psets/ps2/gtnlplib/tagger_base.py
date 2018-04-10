@@ -3,6 +3,7 @@ from gtnlplib import preproc
 from gtnlplib import clf_base # call clf_base.predict
 from gtnlplib.constants import DEV_FILE, OFFSET, TRAIN_FILE
 import operator
+from collections import defaultdict, Counter
 
 def make_classifier_tagger(weights):
     """
@@ -22,7 +23,25 @@ def make_classifier_tagger(weights):
         :rtype: list
 
         """
-        return None
+        # all_counters = {}
+        # returnList = []
+        # for x in words:
+        #     all_counters[x]=1
+        #     predict_v = clf_base.predict(all_counters,weights,all_tags)
+        #     returnList.append(predict_v[0])
+        # return returnList
+
+
+        returnList = []
+        counter = Counter(words)
+
+        for x in words:
+            predict_v = clf_base.predict({x: counter[x]}, weights, all_tags)
+            returnList.append(predict_v[0])
+
+        return returnList
+
+        # return returnList
     return classify
 
 def apply_tagger(tagger,outfilename,all_tags=None,trainfile=TRAIN_FILE,testfile=DEV_FILE):

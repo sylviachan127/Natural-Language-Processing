@@ -17,7 +17,20 @@ def get_markables_for_entity(markables,entity):
     :rtype: list
 
     """
-    raise NotImplementedError
+    # dev_dir = os.path.join('data','dev')
+    # markables_dev,_ = read_data('Siege of Chaves',basedir=dev_dir)
+    # print "mark_dev: ", markables_dev
+
+    returnList = []
+    markSize = len(markables)
+    for marks in range(markSize):
+        for index in markables[marks]:
+            if(index=="entity"):
+                setName = markables[marks][index]
+                if(setName == entity):
+                    stringList = markables[marks]["string"]
+                    returnList.append(' '.join(stringList))
+    return returnList
     
     
 ## deliverable 1.2
@@ -32,7 +45,23 @@ def get_distances(markables, string):
     """
     ants = get_true_antecedents(markables) #hint
     ## hide
-    raise NotImplementedError
+    returnList = []
+    anteIndexList = []
+    indexList = []
+    prevDist = -1
+    lastInd = -1
+    ants = get_true_antecedents(markables) #hint
+    for index in range(len(markables)):
+        currentM = markables[index]
+        currentS = currentM["string"]
+        stringA = ' '.join(currentS)
+        if(stringA.lower()==string.lower()):
+            anteIndex = ants[index]
+            indexList.append(index)
+            anteIndexList.append(anteIndex)
+    for index in range(len(indexList)):
+        returnList.append(indexList[index]-anteIndexList[index])
+    return returnList
     
 ## Deliverable 2.1
 def get_tp(pred_ant,markables):
@@ -43,7 +72,16 @@ def get_tp(pred_ant,markables):
     :returns: list of booleans
 
     """
-    raise NotImplementedError
+    listReturn = []
+    for i in range(len(pred_ant)):
+        antIndex = pred_ant[i]
+        mark_index = markables[i]["entity"]
+        mark_antIndex = markables[antIndex]["entity"]
+        if(antIndex<i) and (mark_index==mark_antIndex):
+            listReturn.append(True)
+        else:
+            listReturn.append(False)
+    return listReturn
     
 ## Deliverable 2.1
 def get_fp(pred_ant,markables):
@@ -54,7 +92,16 @@ def get_fp(pred_ant,markables):
     :returns: list of booleans
 
     """
-    raise NotImplementedError
+    listReturn = []
+    for i in range(len(pred_ant)):
+        antIndex = pred_ant[i]
+        mark_index = markables[i]["entity"]
+        mark_antIndex = markables[antIndex]["entity"]
+        if(antIndex<i) and (mark_index!=mark_antIndex):
+            listReturn.append(True)
+        else:
+            listReturn.append(False)
+    return listReturn
 
 ## Deliverable 2.1
 def get_fn(pred_ant,markables):
@@ -65,7 +112,21 @@ def get_fn(pred_ant,markables):
     :returns: list of booleans
 
     """
-    raise NotImplementedError
+    listReturn = []
+    true_ante = get_true_antecedents(markables)
+    for i in range(len(pred_ant)):
+        ci_hat = pred_ant[i]
+        ci = true_ante[i]
+        if(ci<i):
+            true_ent = markables[ci]["entity"]
+            curr_ent = markables[i]["entity"]
+            if(true_ent==curr_ent):
+                pred_ent = markables[ci_hat]["entity"]
+                if((ci_hat==i) or (pred_ent!=curr_ent)):
+                    listReturn.append(True)
+        else:
+            listReturn.append(False)
+    return listReturn
     
 def recall(pred_ant,markables):
     """Compute the recall, tp/(tp+fn)
